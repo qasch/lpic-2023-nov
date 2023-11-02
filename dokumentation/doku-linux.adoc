@@ -1,0 +1,5 @@
+= Dokumentaion Linux LPIC 1
+
+== Grundlegende Kommandos
+
+
