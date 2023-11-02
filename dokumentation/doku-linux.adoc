@@ -2,7 +2,54 @@
 
 == Grundlegende Kommandos
 
-- `whoami`
-- `pwd`
-- `ls`
+- `whoami` - zeigt den aktuell angemeldeten Benutzer an
+- `pwd` - zeigt das aktuelle Verzeichnis an
+- `ls` - zeigt den Inhalt eines Verzeichnisses an
+- `ls -a` - zeigt auch versteckte Dateien an
+- `ls -l` - zeight ausführliche Informationen zu Dateien an
+- `ls -t` - sortiert nach Änderungsdatum
+- `ls -r` - kehrt Sortierreihenfolge um
+- `cd <dir>` - _Change Directory_: wechselt in das Verzeichnis `<dir>`
+- `su -l <user>` - _Substitute User_: wechselt in den Benutzeraccount `<user>`
+
+== Hilfe auf der Kommmandozeile
+
+- Option `--help` existiert für die meisten Kommandos
+
+=== Manpages
+
+Mit dem Kommando `man <commmand>` kann die Handbuchseite zum Kommando `<command>` aufgerufen werden. So gut wie *jedes* extern realisierte Kommando verfügt über eine Manpage.
+
+Innerhalb der Manpage kann gesucht werden (`/` (vorwärts) bzw. `?` (rückwärts)).
+
+Manpages sind in Abschnitte (_Sektionen_) unterteilt. 
+
+Aufruf einer bestimmten Sektion mit
+
+ man <sectionnumber> <command>
+
+== History
+
+Jedes Kommando wird in der History der Shell gespeichert. Bei der BASH ist es z.B. die Datei `~/.bash_history`. Mit dem Kommando `history` kann eine Liste dieser Kommandos angezeigt werden. Jedes Kommando hat einen Index `<index>`. 
+
+Ein bestimmtes Kommando kann folgendermaßen erneut aufgerufen werden:
+
+ !<index>
+
+Ansonsten kann mit den Cursor durch die History geblättert werden.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
