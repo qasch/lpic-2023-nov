@@ -2,4 +2,7 @@
 
 == Grundlegende Kommandos
 
+- `whoami`
+- `pwd`
+- `ls`
 
