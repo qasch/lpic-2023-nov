@@ -198,5 +198,5 @@ Nach Änderungen muss die Datei `~/.bashrc` neu eingelesen werden. Dies geschieh
 
 - *alle* systemweiten Konfigurationsdateien befinden sich im Verzeichnis `/etc`
 
-
+lokal geändert
 
