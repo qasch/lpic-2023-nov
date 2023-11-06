@@ -82,20 +82,121 @@ Ansonsten finden sich alle Informationen dazu in der Manpage der BASH.
 
 == mehr zu history
 
-TODO
+Alle eingegebenen Kommandos werden in der _history_ gespeichert. Zuerst im Speicher und letztlich beim Beenden der Shell in der Datei `~/.bash_history`.
 
+Jeder reale Benutzer hat eine eigene History für die jeweilige Shell. So hat z.B. `root` eine eigene/andere _history_ als der reguläre Benutzer.
 
+Einige wichtige Kommandos dazu:
 
+* `history` ruft die gesamte history auf
+* `history <anzahl>` zeigt nur die <anzahl> der letzten Einträge auf
+* `!!` führt das letzte Kommando erneut aus
+* `!<index>` führt Kommando mit index <index> aus
+* `!<zeichenfolge>` führt letztes Kommando aus, das mit `<zeichenfolge>` beginnt 
+* `!?<zeichenfolge>` führt letztes Kommando aus, das `<zeichenfolge>` enthält
+* `!$` repräsentiert das letzte Argument des zuletzt eingegebenen Kommandos
 
+Mit der Tastenkombination `<STRG>+R <zeichenfolge>` kann durch alle Einträge in der History geblättert werden, die `<zeichenfolge>` enthalten.
 
+== Variablen
 
+Erstellung einer Variablen und Zuweisung eines Wertes:
 
+ my_var=hallo
 
+Ausgabe des Inhalts einer Variablen (_Variablensubstitution_):
 
+ echo $my_var
 
+Das Dollarzeichen (`$`) ist wieder ein Sonderzeichen. Es weist die Shell an, eine _Substitution_ (Ersetzung) durchzuführen.
 
+Variablen sind immer nur in der *aktuellen* Shell gültig, nicht in z.B. _Subshells_, also Shells, die innerhalt der aktuellen Shell gestartet werden.
 
+Will man Variablen auch in Subshells verfügbar machen, so muss man diese _exportieren_:
 
+ export my_env_var=überall
+
+ my_var=hallo
+ export my_var
+
+Variablen sind so lange gültig, wie die Shell existiert, in der sie definiert wurden.
+
+Variablen können mit `unset` gelöscht werden:
+
+ unset my_var
+
+== Dateioperationen
+
+== mkdir
+
+Mit dem Kommando `mkdir` können Verzeichnisse erstellt werden. Sollen in einem Rutsch mehrere Unterverzeichnisse erstellt werden, übergeben wir zusätzlich den Schalter `-p`.
+
+ mkdir my_dir
+
+ mkdir -p ~/my_dir/sub_dir/sub_sub_dir
+
+== cp
+
+- `cp <quelle> <ziel>` kopiert `<quelle>` nach `<ziel>`. Hierbei sind beides Dateien. Existiert `<ziel>` nicht, wird es erstellt, ansonsten ungefragt überschrieben.
+- `cp -i <quelle> <ziel>` so wird vor dem Überschreiben eine Nachfrage eingeblendet
+- `cp -r <verzeichnis> <ziel>` beim Kopieren von Verzeichnissen muss die Aktion _rekursiv_ durchgeführt werden (Option `-r`)
+- `cp -u <quelle> <ziel>` ersetzt `<ziel>` nur dann, wenn `<quelle>` neuer ist bzw. überhaupt Unterschiede vorhanden sind
+- `cp -p <quelle> <ziel>` behält Dateiatribute (Bestizer, Rechte, Timestamp) bei
+- `cp -a <quelle> <ziel>` behält auch Dateiatribute bei, enthält zusätzlich die Option `-r`.
+
+== mv
+
+Mit `mv` können Dateien verschoben und umbenannt werden.
+
+- `mv <quelle> <ziel>` verschiebt `<quelle>` nach `<ziel>`
+- `mv <quelle> <ziel>` benennt `<quelle>` in `<ziel>` um
+- Für `mv` gibt es keine Option `-r`. Sowohl `<quelle>` als auch `<ziel>` können Verzeichnisse sein. 
+- auch für `mv` gibt es die Option `-i`
+
+== rm
+
+- `rm <datei>` löscht `<datei>` ohne Nachfrage
+- `rm -r <verzeichnis>` löscht `<verzeichnis>`
+- auch für `rm` gibt es die Option `-i`
+
+== rmdir
+
+löscht *leere* Verzeichnisse
+
+== Aliase
+
+Abkürzungen für z.B. längere/häufig benutzte Kommandos
+
+ alias ll='ls -l'
+ alias la='ls -a'
+
+Alias löschen:
+
+ unalias ll
+
+Alle Aliase anzeigen:
+
+ alias
+
+Aliase sind nur in der Shell gültig, in der sie definiert wurden. Analog zu Variablen.
+
+Aliase können persistent konfiguriert werden, z.B. in der Datei `~/.bashrc` bzw. in `~/.bash_aliases`
+
+Nach Änderungen muss die Datei `~/.bashrc` neu eingelesen werden. Dies geschieht automatisch beim Start einer neuen BASH oder alternativ mit dem Kommanod `source` bzw. dessen Abkürzung `.`
+
+ source ~/.bashrc
+ . ~/.bashrc
+
+== Konfigurationsdateien
+
+=== Benutzerspezifische 
+
+- sind immer im Heimatverzeichnis des Nutzers
+- beginnen immer mit einem Punkt bzw. befinden sich in einem Verzeichnis, das mit einem Punkt beginnt
+
+=== Systemweite
+
+- *alle* systemweiten Konfigurationsdateien befinden sich im Verzeichnis `/etc`
 
 
 
