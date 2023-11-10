@@ -1,0 +1,33 @@
+== Übungen zu Benutzer und Gruppen
+
+Kai Schell <kai.schell@signet.de>
+
+:lang: de   
+:icons: font
+:toc:
+:toc-position: right
+:numbered!:
+
+
+TODO: 
+
+* In welchem Verzeichnis soll das alles gemacht werden?
+* Was als welcher Benutzer?
+* Gruppe sysadmins Erstellen
+* Realistisches Szenzria Webentwicklung
+
+. Erstellen Sie einen neuen Benutzer namens `johndoe` und vergeben Sie ein Passwort für diesen Benutzer.
+. Erstellen Sie eine neue Gruppe namens `webdevs`.
+. Fügen Sie den Benutzer `johndoe` zur Gruppe `webdevs` hinzu.
+. Erstellen Sie ein neues Verzeichnis mit dem Namen `permissions`. 
+. Erstellen Sie im Verzeichnis `permissions` eine neue Datei namens `index.html` und setzen Sie den Besitzer auf `johndoe` und die Gruppe auf `webdevs`.
+. Ändern Sie die Berechtigungen der `index.html`-Datei so, dass der Besitzer die Datei lesen und schreiben kann, die Gruppe die Datei lesen und schreiben kann und alle anderen keine Berechtigungen haben. Überlegen Sie sich, ob hier die oktale oder die symbolische Rechtevergabe schneller zum Ziel führt.
+. Erstellen Sie im Verzeichnis `permissions` eine weitere Datei namens `script.sh`, setzen Sie den Besitzer auf `johndoe` und die Gruppe auf `webdevs` und sorgen Sie dafür, dass `johndoe` die Datei ausführen kann. Ist hier die symbolische oder die oktale Rechtevergabe besser geeignet?
+. Erstellen Sie im Verzeichnis `permissions` ein neues Verzeichnis namens `logs` und setzen Sie den Besitzer auf `root` und die Gruppe auf `webdevs`.
+. Ändern Sie die Berechtigungen des `logs`-Verzeichnisses so, dass der Besitzer im Verzeichnis lesen, schreiben und ausführen kann, die Gruppe im Verzeichnis lesen und ausführen kann und alle anderen keine Berechtigungen haben. 
+. Erstellen Sie eine neue Datei namens `error.log` im `logs`-Verzeichnis und überprüfen Sie die Gruppenzugehörigkeiten der Datei.
+. Ändern Sie die Gruppenzugehörigkeit des `logs`-Verzeichnisses und aller darin enthaltenen Elemente auf `sysadmins`.
+. Entfernen Sie den Benutzer `johndoe` aus der Gruppe `webdevs`.
+. Löschen Sie die `error.log`-Datei und das `logs`-Verzeichnis in einem Schritten.
+
+
