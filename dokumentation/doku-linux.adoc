@@ -565,17 +565,84 @@ Gut zu sehen am Listing von `ls -l`. Ist das entsprechende Recht gesetzt, ist au
  110 100 100
  rw- r-- r--
 
-  
+== Standardberechtigungen 
 
+Sinnvolle Vollberechtigungen:
 
+- auf Dateien: 666
+- auf Verzeichnisse: 777
 
+=== umask
 
+Die `umask` gibt an, welche Berechtigungsbits *nicht* gesetzt sind, ausgehend von den _sinvollen Vollberechtigungen_ (s.o.).
 
+Die `umask` kann von jedem Benutzer selbst gesetzt werden, entweder durch einen Aufruf in der Shell (ist dann auch nur für die aktuelle Shell gültig) oder durch den Eintrag in einer Datei (Standard: `~/.profile`).
 
+*Wichtig:* Die `umask` wird *nicht subtrahiert*, wie z.B. im LPIC-1 Buch oder Internet beschrieben. Vielmehr ist es die Negation und logische UND-Verknüpfung:
 
+Verzeichnisse:
 
+ 111111111   -> 777
+ 111101101   -> 022 negiert
+ ---------
+ 111101101   -> logisches UND
+  7  5  5
 
+Dateien:
 
+ 110110110   -> 666
+ 111101101   -> 022 negiert
+ ---------
+ 110100100   -> logisches UND
+  6  4  4
+
+== Sonderbits
+
+- https://de.wikipedia.org/wiki/Unix-Dateirechte#Beispiele
+
+=== SUID Bit
+
+Angewandt auf eine _ausführbare Binärdatei_ (gilt *nicht* für Skripte), sorgt das SUID-Bit dafür, dass das Kommando im Berechtigungskontext des Besitzers der Datei ausgeführt wird, nicht aber im Berechtigungskontext des aufrufenden Benutzers.
+
+Beispiel `/usr/bin/passwd`:
+
+`passwd` schreibt das neue Passwort in die Datei `/etc/shadow`, hier hat aber nur `root` Schreibrechte. Ohne das SUID-Bit kann das neue Passwort nicht in die Datei geschreiben werden.
+
+ ls -l /etc/shadow
+ -rw------- 1 root root 1060 Oct  9 14:53 /etc/shadow
+
+ ls -l /usr/bin/passwd
+ -rwsr-xr-x 1 root root 80768 Sep 24 14:50 /usr/bin/passwd
+
+Das kleine `s` gibt an, dass sowohl das SUID Bit als auch das Ausführugnsbit gesetzt sind. Würde das Ausführungsbit fehlen, stünde hier ein grosses `S`.
+
+=== SGID Bit
+
+Angewandt auf eine _ausführbare Binärdatei_ (gilt *nicht* für Skripte), sorgt das SGID-Bit dafür, dass das Kommando im Berechtigungskontext der Gruppe der Datei ausgeführt wird, nicht aber im Berechtigungskontext des aufrufenden Benutzers.
+
+Angewandt auf ein Verzeichnis sorgt das SGID-Bit dafür, dass neue erstellte Dateien der Gruppe zugeornet werden, die auch dem Verzeichnis zugeordnet ist und nicht der initialen Gruppe des Users, der die Datei erstellt.
+
+Beispiel `/var/mail`:
+
+ ls -l /var/mail
+ -rwxrwsr-x 1 root root 10 Sep 18 15:18 /var/mail
+
+=== Sticky Bit
+
+Auf ein Verzeichniss angewandt, sorgt das Sticky Bit dafür, dass nur der Besitzer einer Datei diese Datei verändern oder löschen kann.
+
+Beispiel: 
+
+ /tmp
+
+ ls -ld /tmp
+ drwxrwxrwt 17 root root 440 Nov 10 11:27 /tmp
+
+=== Oktalwerte und Symbole der Sonderbits
+
+ SUID:   4   u+s
+ SGID:   2   g+s
+ Sticky: 1   o+t
 
 
 
