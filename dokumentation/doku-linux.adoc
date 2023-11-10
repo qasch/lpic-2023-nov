@@ -440,6 +440,15 @@ Anschließend muss noch das Kommando `passwd <user>` aufgerufen werden, um dem B
 - `/etc/group`: Liste der Gruppen und deren Mitglieder
 - `/etc/gshadow`: Passwörter für Gruppen (wird jedoch nicht genutzt)
 
+=== Benutzer wechseln
+
+`su`: _Substitute User_ Benutzer wechseln
+
+- `su tux`: Wechselt in den Benutzeraccount von `tux`, Umgegung (env, Variablen etc.) werden teilweise neu gesetzt, aber nicht alle.
+- `su - tux`: wie oben, es werden aber alle Umgebungsvariablen neu gesetzt (auch `$PATH`) ("echte" Login Shell)
+- `su -l tux`: wie oben
+- `su --login tux`: wie oben
+
 === Gruppen
 
 - beim Anlegen eines Benutzers wird (auf den meisten Distributionen) eine Gruppe erstellt, die genauso heißt wie der Benutzer. Dies ist die _primäre_ oder _initiale_ Gruppe des Users.
@@ -448,9 +457,126 @@ Anschließend muss noch das Kommando `passwd <user>` aufgerufen werden, um dem B
 
 Gruppen können mit dem Kommando `groupadd` erstellt werden
 
+ groupadd gfn 
 
+Benutzer `tux` der Gruppe `gfn` hinzufügen:
+
+ usermod -aG gfn tux
+
+Wichtig ist hier das `-a` (_append_), ansonsten werden alle anderen Gruppenzugehörigkeiten von `tux` gelöscht (bis auf die _primäre_ Gruppe).
+
+*Wichtig:* Gruppenzugehörigkeiten werden erst aktiv, wenn sich der Benutzer einmal komplett vom System ab- und wieder angemeldet hat.
+
+=== Besitzer / Gruppe von Dateien ändern
+
+Besitzer auf `tux` ändern:
+
+ chown tux file.txt
+
+Besitzer auf `tux` und Gruppe auf `users` ändern:
+
+ chown tux:users file.txt
+
+Nur Gruppe auf `users` ändern:
+
+ chown :users file.txt
+ chgrp users file.txt
 
 == Rechteverwaltung
+
+- `r` read
+- `w` write
+- `x` eXecute
+
+Im Listing von `ls -l`:
+
+ -rw-r--r-- 1 tux tux 27 Nov  6 10:50 file.txt
+
+Das erste Minuszeichen (`-`) gibt an, dass es sich um eine reguläre Datei handelt, hier könnte aber auch ein `d` für _Directory_ stehen oder ein `b` für _Block Device_, ein `l` für _Symbolic Link_ etc.
+
+Es folgen die Berechtigungen für User, Group und Others:
+
+ User Group Others
+ rw-  r--   r--
+
+=== Bedeutung der Berechtigungen
+
+Angewandt auf Dateien:
+
+- `r` Inhalt der Datei lesen
+- `w` Inhalt der Datei verändern
+- `x` Datei ausführen
+
+Angewandt auf Verzeichnisse:
+
+- `r` Inhalt des Verzeichnisses lesen
+- `w` Dateien oder Verzeichnisse erstellen oder löschen
+- `x` Verzeichniss betreten
+
+=== Symbolische Rechtevergabe
+
+Hier werden _Symbole_ verwendet:
+
+- `r` read
+- `w` write
+- `x` eXecute
+- `u` User
+- `g` Group
+- `o` Others
+- `a` All (`ugo`)
+ 
+Berechtigungen können hinzugefügt (`+`), entfernt (`-`) oder gesetzt (`=`) werden.
+
+Beispiele:
+
+ chmod u-w file.txt             # Schreibrecht für den User entfernen
+ chmod g+w file.txt             # Schreibrecht für die Gruppe hinzufügen
+ chmod go-x file.txt            # Gruppe und Ohters das Ausführungsrecht entziehen
+ chmod u=rwx,g=rw,o=r file.txt  # Rechte für User auf rwx setzen, für Gruppe auf rw und Ohters auf r
+
+Die symbolische Rechtevergabe eignet sich also vor allem dafür, wenn einzelne Rechte hinzugefügt oder entfernt werden sollen, die anderen Rechte beibehalten werden.
+
+=== Numerische / Oktale Rechtevergabe
+
+- `r` read    -> 4
+- `w` write   -> 2
+- `x` eXecute -> 1
+
+Bei der numerischen Rechtevergabe können nur *alle* Rechte auf einmal gesetzt werden, also für User, Group und Others gleichzeitig. Die Werte der Rechte werden dabei addiert:
+
+       ugo
+ chmod 640 file.txt
+
+Ist gleichbedeuten mit:
+
+ chmod u=rw,g=r,o-rwx file.txt
+
+==== Herkunft/Erklärung 
+
+ Okt. Binär
+
+  1   001
+  2   010
+  4   100
+
+Gut zu sehen am Listing von `ls -l`. Ist das entsprechende Recht gesetzt, ist auch ein Bit (im Speicher) gesetzt:
+
+  6   4   4
+ 110 100 100
+ rw- r-- r--
+
+  
+
+
+
+
+
+
+
+
+
+
+
 
 
 
