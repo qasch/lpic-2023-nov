@@ -997,8 +997,69 @@ Autorefresh has been enabled for repository 'repo-non-oss'.
 # zypper removerepo packman
 ----
 
+== Regular Expressions
 
+https://www.debuggex.com/
 
+- `.`: ein beliebiges Zeichen
+
+- `\w`: Wordcharacter [a-zA-Z0-9_]
+- `\W`: kein Wordcharacter [a-zA-Z0-9_]
+- `\d`: Ziffer [0-9]
+- `\D`: keine Ziffer [0-9]
+- `\s`: Whitespace (Space, Tab, Newline)
+- `\S`: kein Whitespace (Space, Tab, Newline)
+
+- `\b`: Wortgrenze
+- `\B`: keine Wortgrenze
+
+Listen:
+
+- `[]`: passt auf jedes Zeichen, das in den Klammern angegeben ist
+- `[a-z]`: passt auf jeden Kleinbuchstaben
+- `[0-9]`: passt auf alle Zahlen
+
+- `()`: Gruppe
+- `(entweder|oder)`: passt auf `entweder` oder `oder`
+
+Anker:
+
+-`^`: Anfang der Zeile
+- `$`: Ende der Zeile
+
+Quantifier:
+
+- `*`: 0 Mal oder beliebig oft
+- `+`: 1 Mal oder beliebig oft
+- `?`: 0 Mal oder 1 Mal
+- `{3}`: exakt 3 Mal
+* `{1,3}`: 1 bis 3 Mal
+
+== Dateien mit gesetzten Sonderbits finden
+
+Wir durchsuchen das gesamte System mit `find` und prüfen so jede Datei auf gesetzte Berechtigungen. Berechtigungen der Sonderbits:
+
+- Sticky-Bit: `1000`
+- SGID-Bit: `2000`
+- SUID-Bit: `4000`
+
+Alle Dateien, wo *auschließlich* bzw. *exakt* nur das SUID-Bit gesetzt ist:
+
+ find / -perm 4000
+ find / -perm u=s
+ find / -perm u+s
+
+Alle Dateien, wo *mindestens* nur das SUID-Bit gesetzt ist (`-` vor den Berechtigungen [-> mindestens]):
+
+ find / -perm -4000
+ find / -perm -u=s
+ find / -perm -u+s
+
+Alle Dateien, wo *entweder* das SUID-Bit oder das SGID-Bit gesetzt ist (`/` or den Berechtigungen [-> entweder oder]):
+
+ find / -perm /6000
+ find / -perm /ug=s
+ find / -perm /ug+s
 
 
 
