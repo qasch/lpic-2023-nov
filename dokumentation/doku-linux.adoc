@@ -1062,6 +1062,131 @@ Alle Dateien, wo *entweder* das SUID-Bit oder das SGID-Bit gesetzt ist (`/` or d
  find / -perm /ug+s
 
 
+== cron
+
+Format Angabe Zeitintervalle:
+
+----
+ .---------------- minute (0 - 59)
+ |  .------------- hour (0 - 23)
+ |  |  .---------- day of month (1 - 31)
+ |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+ |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+ |  |  |  |  |
+ *  *  *  *  * command to be executed
+----
+
+- Es können spezifische Zeitpunkte, Listen von Zeitpunkten (durch Komma getrennt), Bereiche (durch Minuszeichen getrennt) oder Intervalle (Angabe mit Slash `/`) angegebenen werden. Beispiele:
+
+ mon,tue,thu    -> Montag, Dienstag und Donnerstag
+ mon-sat        -> Montag bis Samstag
+ 9-16           -> 9 bis 16 Uhr
+ */5            -> alle fünf (z.B. Minuten)
+
+- Dienst, der Aufgaben (`cronjobs`) zu einem bestimmmten Zeitpunkt oder Zeitintervall automatisch ausführt
+- `cronjobs` werden *nicht* nachgeholt, sollte der Rechner zu dem angegebenen Zeitpunkt aus sein
+- Aufgaben werden in `crontabs` festgelegt
+- es gibt Benutzer `crontabs` für jeden Benutzer (auch `root`) und eine systemweite `crontab` unter `/etc/crontab`
+- diese unterscheidet sich von den User-crontabs (nur) dadurch, dass es eine zusätzliche Spalte für den auszuführeden Benutzer enthält
+- in den Verzeichnissen `/etc/cron.hourly`, `/etc/cron.daily` usw. können Skripte abgelegt werden, die dann periodisch ausgeführt werden
+- je nach Distribution können die Verzeichnisse auch `/etc/cron.d/daily` etc. heissen
+- User crontabs liegen z.B. unter `/var/spool/cron/crontabs` (distributionsabhängig)
+- die User crontab Dateien werden nicht direkt editiert, sondern mit dem Kommando `crontab -e`
+- `crontab -r` löscht die crontab des aufrufenden Benutzers
+- `crontab -l` zeigt den Inhalt der crontab an
+- `root` kann eine User crontab mit dem Kommando `crontab -u <user> -e / -l / -r` editieren, auflisten oder löschen
+- Informationen über den Aufbau und die Angabe von Zeiten/Intervallen sind in der Manpage zu finden: `man 5 crontab`, Informationen über das Kommando `crontab` unter `man crontab`
+- in den Dateien `/etc/cron.allow` und `/etc/cron.deny` koenne Zugriffe auf den cron Daemon geregelt werden
+- existiert die Datei `/etc/cron.allow` können _ausschliesslich_ die darin gelisteten Benutzer (einer pro Zeile) `cron` benutzen
+- existiert die Datei `/etc/cron.deny` und *keine* `/etc/cron.allow` können alle *nicht* darin gelisteten Benutzer (einer pro Zeile) `cron` benutzen
+- existieren beide Dateien, wird nur `/etc/cron.allow` ausgelesen
+
+== systemd-timer
+
+- `systemd-timer` sind eine Alternative von `systemd` für `cron`
+- diese sind Unit Files mit der Endung `.timer`
+- für jeden Timer *muss ein Service File vorliegen* (`.service`), welches den Service beschreibt, der zu den im Timer angegebenen Zeitpunkt gestartet wird
+- Timer und Service Files müssen den gleichen Namen (bis auf die Endung) haben
+
+Beispiel: Starte den Service `/etc/systemd/system/foobar.service` um 05:30 Uhr am ersten Montag jeden Monats. Falls der Rechner zu diesem Zeitpunkt nicht an sein sollte wird der Timer nachgeholt sobald der Rechner wieder startet (`Persistent=true`):
+
+----
+[Unit]
+Description=Run the foobar service
+
+[Timer]
+OnCalendar=Mon *-*-1..7 05:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+----
+
+- Syntax/Aufbau Eintrag `OnCalendar=` ähnlich wie bei cronjobs
+
+----
+# DayOfWeek Year-Month-Day  Hour:Minute:Second
+
+  Mon       *   - *    1..7 05:30:00
+
+# Alternative Angaben:
+
+  hourly
+  daily
+  weekly
+  monthly
+  yearly
+----
+
+- generelle Syntax zu Zeitangaben in `systemd` in Manpage `man systemd.time`, spezifischer für Timer unter `CALENDAR EVENTS`
+- Angabe der Spalte `DayOfWeek` ist optional
+- `*`, `/` und `,` wie in crontabs
+- mit `..` kann eine Range angegeben werden (wie `-` in crontabs)
+- `timer` müssen wie `services` aktiviert bzw. gestartet werden:
+
+----
+systemctl enable foobar.timer
+systemctl start foobar.timer
+
+# Alternativ, aktiveren und starten in einem Kommando:
+systemctl enable --now foobar.timer
+----
+
+- nach einer Änderung an den Unit Files muss noch das Kommando `systemctl daemon-reload` ausgeführt werden
+- es können auch sog. _Monotonic Timers_ verwendet werden (`systemd-run`)
+- diese werden nach Ablauf einer gewissen Zeit aktiviert (ähnlich wie `at`)
+
+=== at 
+
+
+- Mit dem Kommanod `at` kann eine bestimmte Aufgabe nach Ablauf einer gewissen Zeit bzw. einmalig zu einem Zeitupunkt ausgeführt werden
+
+----
+at now + 5 minutes
+
+at> date
+at> Ctrl+D 
+
+job 1 at Mon Dec 04 9:07:00 2023
+----
+
+- `at` ist interaktiv
+- akzeptiert umgangssprachliche Zeitangaben: `tomorrow`, `noon`, `teatime` etc.
+- `at -l` bzw. `atq` zeigt eine Liste der Jobs an
+- `at -r`, `at -d`, `atrm` löscht einen bestimmten Job
+- `at -b` ist ein Alias auf `batch` (`batch` ist wie `at`, Jobs werden aber nur ausgeführt, wenn die Systemlast es zulässt)
+
+=== systemd-run
+
+- Alternative von `systemd` zu `at`
+- muss mit `root`-Rechten ausgeführt werden
+- Aufgabe wird nur *einmal* ausgeführt
+
+----
+# systemd-run --on-calendar='2023-12-04 10:00' /usr/bin/breakfast-break
+
+# systemd-run --on-active="2m" ./foo.sh
+----
 
 
 
