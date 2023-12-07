@@ -1430,3 +1430,21 @@ Möchte man auf ein Journal einer anderen Maschine zugreifen, so kann man entwed
 - `journalctl -D /var/log/journal/<machine-id>`
 - `cat /etc/machine-id` die Machine-ID ausgeben lassen
 - Die Machine-ID kennzeichnet ein System eindeutig, ähnlich wie eine UID, PID etc.
+
+
+=== Selbst Ereignisse loggen
+
+==== Programm logger
+
+- ursprünglich für `rsyslog`
+- kann aber auch Einträge ins Journal schreiben
+
+ logger -t Backup "Datensicherung erfolgreich"
+
+ tail -n 1 /var/log/syslog
+
+- unter systemd eher:
+
+ echo "Log as you can" | systemd-cat -t backup-script -p info
+
+ journalctl -e -n 1
