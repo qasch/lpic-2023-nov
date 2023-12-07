@@ -1188,5 +1188,94 @@ job 1 at Mon Dec 04 9:07:00 2023
 # systemd-run --on-active="2m" ./foo.sh
 ----
 
+== Arten von Shells
+
+- Interaktive / Nicht-interaktive Shells
+- Login / Nicht-Login Shells
+
+
+== Shellscripting
+
+TODO
+
+
+== Mail Transfer Agent (MTA) basics
+
+- MTA - Mail Transfer Agent (sendmail, postfix, exim, qmail)
+- MDA - Mail Delivery Agent (procmail, cyrus, maildrop)
+- MUA - Mail User Agent (Thunderbird, Outlook, Enigmail, mutt, kmail, evolution)
+
+TODO
+
+== Logging
+
+- `syslogd`
+- `syslog-ng`
+- `rsyslog`
+- `journald`
+
+=== Log-Level
+
+- `debug` 
+- `info`
+- `notice`
+- `warning, warn`
+- `error, err`
+- `crit`
+- `alert` Alarm
+- `emerg, panic`
+
+=== Facilities
+
+- `/etc/rsyslog.conf`
+
+----
+facility.leve action
+----
+
+== journald
+
+- `journald` speichert bereits Meldungen aus dem sog. _Early Boot_, da es in `systemd` integriert ist und somit direkt startet 
+- es wird *alles* geloggt, inkl. Metainformationen    
+- arbeitet mit sog. _Trustet Facilities_, Einträge werden signiert
+- Log-Einträge lassen sich somit im Nachhinein nicht mehr ändern, ohne dass dies nachgewiesen werden kann    
+- `journald` loggt nicht mehr in Textdateien, sondern in Datenbanken
+- keine Logrotation, `journald` überwacht seine Größe selbst: max. 10% der HD bzw. max 4 GB
+- in Debian 12 ist kein `rsyslog` mehr installiert und es in der config deaktiviert, in der 11er lief es parallel  
+- systemd ist modular und kann (Teile?) abgeschaltet bekommen, es kann in Debian 12 nachinstalliert werden    
+ /etc/systemd/jounal.conf  ForwardToSyslog=yes   syslog ist aktiviert   mit No deaktiviert  
+- Storage=auto  Journal besteht nur im RAM    
+- Storage=persistent   -> die Dateie wird var/log/jounal erstellt, kann aber auch manuell erstellt werden   
+- volatile nur im RAM  none stellt es ab, syslog kann nachinstalliert werden  
+- Seal=yes  verschlüsselung  
+- man journald.conf  journald.conf, journald.conf.d, journald@.conf - Journal-Dienst-Konfigurationsdateien  
+
+SystemMaxUse  max. Speicherverbrauch definierbar  
+
+- jounalctl  Abfragen und Control des Systemd-Journals  Anzeige mit less
+
+  jounalctl --vacuum-size 50M  beschränkt das Journal auf 50 MB  
+  jounalctl --vacuum-time 2month    
+  jounalctl --disku-sage  als root oder der Gruppe adm sehen alle Daten  
+  jounalctl --verify   Prüft die Journal-Dateien auf interne Konsistenz   nach verkleinerung bleiben zusammenhängende Logmeldungen trotzdem erhalten  
+
+- jounalctl -b  -b Einträge des aktuellen Boots anzeigen  jounalctl -b | grep <suchwort>
+- jounalctl -b -1  Einträge des vorherigen Boots anzeigen  Zeigt Nachrichten von einem bestimmten Systemstart. Dies passt auf »_BOOT_ID=«.
+- jounalctl --since="20 min ago"  Meldungen der letzten 20 Min.   since yesterday   oder genaues Datum mit oder ohne Uhrzeit'2023-12-01 12.55'  
+- jounalctl --since='2023-12-01 12.55' --until'2023-12-01 13.55'    
+- Zeitangaben wie bei systemd.time  einheitliche Bedienung  
+
+  jounalctl -n            new  neueste Einträge anzeigen    jounalctl -n 20
+  jounalctl -e            end  ans Ende des Logs springen  
+  jounalctl -r            reverse  umgedrehte Reihenfolge  
+  jounalctl -k  Kernelmeldungen  
+  jounalctl -pr           priority errors  priorisierte Meldungen   hier mit Fehlern  
+  jounalctl -u            units  Dienste, targets, mounts, device, sockets sind units    jounalctl -u apache2
+  jounalctl /dev/sda  zeigt Meldungen der Festplatte sda an  
+  jounalctl _UUID=1000  Einträge des 1. Nutzers betreffend
+
+
+
+
 
 
