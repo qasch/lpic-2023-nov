@@ -1209,28 +1209,170 @@ TODO
 
 == Logging
 
-- `syslogd`
-- `syslog-ng`
-- `rsyslog`
-- `journald`
+=== Programme zur Protokollierung
 
-=== Log-Level
+- `syslogd`: ältester Logging Dienst, heute so gut wie nicht mehr in Gebrauch
+- `syslog-ng`: Nachfolger von `syslogd`
+- `rsyslog`: lange Zeit Standard der meisten Distribution
+- `journald`: bei Verwendung von `systemd`, unterscheidet sich technisch
+  erheblich von den anderen
 
-- `debug` 
-- `info`
-- `notice`
-- `warning, warn`
-- `error, err`
-- `crit`
-- `alert`
-- `emerg, panic`
+=== rsyslog
 
-=== Facilities
+- Konfiguration in Datei `/etc/rsyslog.conf` (nicht `/etc/rsyslogd.conf`)oder Dateien unterhalb von `/etc/rsyslog.d/`
+- Dateien enthalten Regeln
+- jede Zeile besteht aus den drei Komponenten: `facility.level action`:
+  - `facility`: Einrichtung, die zu protokollierenden Eintrag erstellt
+  - typisch sind: `auth, authpriv, cron, daemon, kern, lpr, mail, mark, news, syslog, user, uucp, local0` bis `local7`
+  - Asterisk: alle Einträge
+  - `local0` bis `local7`: wenn `Syslog` für eigene Programme verwendet werden soll
+- `level`: legt Protokollierungsgrad fest
+  - `debug`: externer, in der Regel unnötiger Protokollierungsgrad
+  - `info`: harmlose Informatinen
+  - `notice`: ungefährliche Hinweise
+  - `warning, warn`: normalerweise harmlos
+  - `err, error`: z.B. Authentifizierungsfehler, I/O-Fehler ...
+  - `crit`: Kritischer Fehler, sorgt immer für Probleme
+  - `alert`: Alarm:> schwerwiegendes Problem
+  - `emerg, panic`: (wenn überhaupt noch) als letzter Eintrag vor Systemcrash
+  - `error, warn, panic` sind veraltet
+- `action`: Bezeichnung etwas irreführend: ZIEL, in das das Facility protokollieren soll (normalerweise Datei, kann aber auch anderer Rechner, Benutzerliste)
 
-- `/etc/rsyslog.conf`
+Auszug aus `rsyslog.conf` (Sektion `RULES`):
 
 ----
-facility.leve action
+###############
+#### RULES ####
+###############
+
+# First some standard log files.  Log by facility.
+#
+auth,authpriv.*                 /var/log/auth.log
+*.*;auth,authpriv.none          -/var/log/syslog
+#cron.*                         /var/log/cron.log
+daemon.*                        -/var/log/daemon.log
+kern.*                          -/var/log/kern.log
+lpr.*                           -/var/log/lpr.log
+mail.*                          -/var/log/mail.log
+user.*                          -/var/log/user.log
+
+#
+# Logging for the mail system.  Split it up so that
+# it is easy to write scripts to parse these files.
+#
+mail.info                       -/var/log/mail.info
+mail.warn                       -/var/log/mail.warn
+mail.err                        /var/log/mail.err
+
+#
+# Some "catch-all" log files.
+#
+*.`debug;\
+        auth,authpriv.none;\
+	news.none;mail.none     -/var/log/debug
+*.`info;*.`notice;*.`warn;\
+	auth,authpriv.none;\
+	cron,daemon.none;\
+	mail,news.none          -/var/log/messages
+----
+
+- Logging kann auch auf einem entfernten Rechner erfolgen
+- dazu muss das Zielsystem wie folgt vorbereitet werden um Remotelogging sowohl
+  für UDP wie auch TCP zu unterstützten:
+
+----
+# provides UDP syslog reception
+$ModLoad imudp
+$UDPServersRun 514
+# provides TCP syslog reception
+$ModLoad imtcp
+$TCPServersRun 514
+----
+
+- auf dem System, welches geloggt werden soll, muss folgende Zeile eingetragen werden:
+
+----
+*.* 192.168.9.88:513
+
+*.* <IP Remote>:513
+----
+
+- es wird zusätzlich lokal geloggt
+- die Daten sind nicht verschlüsselt
+
+=== Log Dateien durchsuchen
+
+- mit den bekannten Tools: `less`, `tail -f`, `grep` etc.
+
+----
+grep sshd /var/log/syslog | grep invalid | less
+----
+ 
+=== /etc/logrotate.conf
+
+- `logrotate` überwacht Log-Dateien, damit sie nciht das System überfluten
+- Konfiguration unter `/etc/logrotate.conf` bzw. `/etc/logrotate.d` (hier legen
+  üblicherweise Programme ihre eigene Konfiguration ab)
+- `logrotate` benennt Logdatei nach Ablauf einer bestimmten Zeit um, mit dem Suffix `.1` und erstellt eine neue
+  (leere) Datei
+- beim nächsten Durchgang erhält diese Datei den Suffix `.2.gz` und wird
+  zusätzlich komprimiert
+- Anzahl zu behaltener Dateien sowie Intervall sind konfigurierbar
+- sollte täglich von `cron` ausgeführt werden
+
+Auszug aus `logrotate.conf`
+
+----
+# rotate log files weekly
+weekly
+
+# keep 4 weeks worth of backlogs
+rotate 4
+
+# restrict maximum size of log files
+#size 20M
+
+# create new (empty) log files after rotating old ones
+create
+
+# uncomment this if you want your log files compressed
+#compress
+
+# Logs are moved into directory for rotation
+# olddir /var/log/archive
+
+# Ignore pacman saved files
+tabooext + .pacorig .pacnew .pacsave
+
+# Arch packages drop log rotation information into this directory
+include /etc/logrotate.d
+
+/var/log/wtmp {
+    monthly
+    create 0664 root utmp
+    minsize 1M
+    rotate 1
+}
+
+/var/log/btmp {
+    # don't log an error if just one log file is missing
+    missingok
+    monthly
+    create 0600 root utmp
+    rotate 1
+}
+
+----
+
+Auszug aus einer Datei in `/etc/logrotate.d`:
+
+----
+rotate 6
+monthly
+compress
+missingok
+notifempty
+create 640 www-data adm
 ----
 
 == journald
@@ -1241,19 +1383,19 @@ facility.leve action
 - Log-Einträge lassen sich somit im Nachhinein nicht mehr ändern, ohne dass dies nachgewiesen werden kann    
 - `journald` loggt nicht mehr in Textdateien, sondern in Datenbanken
 - keine Logrotation, `journald` überwacht seine Größe selbst: max. 10% der HD bzw. max 4 GB
-- als Kompatibilitätsschicht stellt `journald` die Funktion bereit, Log Meldungen an den `rsyslog` weiterzuleiten. Dazu muss in der Konfigurationsdatei `/etc/system/journald.conf` der Eintrag `ForwardToSyslog=yes` existieren und der Dienst `rsyslog` installiert sein und laufen
+- als Kompatibilitätsschicht stellt `journald` die Funktion bereit, Log Meldungen an den `rsyslog` weiterzuleiten. Dazu muss in der Konfigurationsdatei `/etc/system/journald.conf` der Eintrag `ForwardToSyslog`yes` existieren und der Dienst `rsyslog` installiert sein und laufen
 - in Debian 12 ist kein `rsyslog` mehr installiert. Obiges Verhalten kann also durch Installation von `rsyslog` wiederhergestellt werden
 - `systemd` ist generell modular aufgebaut, man kann also Teile/Module abschalten falls man das möchte
 - Das Journal kann entweder in eine Datei auf der Festlplatte erstellt werden oder nur im RAM. Dazu gibt es folgende Einstellungen in der `/etc/systemd/journald.conf`:
-  - `Storage=volatile`:  Das Journal besteht nur im RAM    
-  - `Storage=auto`:  Journal besteht nur im RAM, es sei denn das Verzeichnis `/var/log/journal` existiert, dann werden darin die Datenbankdateien erstellt
-- `Storage=persistent`: Logging auf der Platee, die Datei `/var/log/jounal` wird erstellt falls nicht vorhanden
-  - `Storage=none`:  Logging nur auf der Konsole etc.
-- `Seal=yes`: Log Meldungen werden _gesealt_, können also nicht unbemerkt verändert werden
+  - `Storage`volatile`:  Das Journal besteht nur im RAM    
+  - `Storage`auto`:  Journal besteht nur im RAM, es sei denn das Verzeichnis `/var/log/journal` existiert, dann werden darin die Datenbankdateien erstellt
+- `Storage`persistent`: Logging auf der Platte, die Datei `/var/log/jounal` wird erstellt falls nicht vorhanden
+  - `Storage`none`:  Logging nur auf der Konsole etc.
+- `Seal`yes`: Log Meldungen werden _gesealt_, können also nicht unbemerkt verändert werden
 - `SystemMaxUse`:  max. Speicherverbrauch definierbar  
 - `man journald.conf`: Manpage der journald-Konfigurationsdatei
 
-=== Abfrage des journals
+``` Abfrage des Journals
 
 Als regulärer User kann man nicht alle Log Meldungen sehen. Dies kann man ändern, in dem man den Benutzer der Gruppe `adm` oder `systemd-journal` hinzufügt.
 
@@ -1265,10 +1407,10 @@ Als regulärer User kann man nicht alle Log Meldungen sehen. Dies kann man ände
 - `jounalctl -b`, `journalctl -b 0`: Einträge des aktuellen Boots anzeigen
 - `jounalctl -b -1`  Einträge des vorherigen Boots anzeigen. `-1` ist hier der Offset. Mit `3` würden z.B. die Meldungen des dritten Boots angezeigt werden.
 - `journalctl --list-boots` zeigt eine Liste aller Bootvorgänge an
-- `jounalctl --since="20 min ago"`  Meldungen der letzten 20 Min.   
+- `jounalctl --since`"20 min ago"`  Meldungen der letzten 20 Min.   
 - `journalctl --since yesterday`: Meldungen seit gestern   
-- `journalctl --since='2023-12-01 12.55'` Meldungen seit diesem Zeitpunkt 
-- `jounalctl --since='2023-12-01 12.55' --until'2023-12-01 13.55'` Meldungen zwischen diesen Zeitpunkten
+- `journalctl --since`'2023-12-01 12.55'` Meldungen seit diesem Zeitpunkt 
+- `jounalctl --since`'2023-12-01 12.55' --until'2023-12-01 13.55'` Meldungen zwischen diesen Zeitpunkten
 - Zeitangaben sieht `man systemd.time` -> einheitliche Syntax in `systemd` (also wie bei z.B. Timern)
 - `jounalctl -n` (_new_) 10 neuste Einträge anzeigen (analog zu `tail`)
 - `jounalctl -n 20` 20 neuste Einträge
@@ -1278,13 +1420,13 @@ Als regulärer User kann man nicht alle Log Meldungen sehen. Dies kann man ände
 - `jounalctl -p err` (_priority errors_) Angabe der Priority / des Log-Levels _error_
 - `jounalctl -u apache2` (_unit_) Anzeigen der Meldungen des _Units_ Apache2 (unter `systemd` ist alles ein _Unit_: Dienste (services), targets, mounts, device, sockets etc.)
 - `jounalctl /dev/sda` zeigt Meldungen des Geräts `/dev/sda` an  
-- `jounalctl _UUID=1000`  Einträge des Nutzers mit der UID 1000
+- `jounalctl _UID`1000`  Einträge des Nutzers mit der UID 1000
 
 Auch bei Verwendung von `journald` können die Daten auf einen Server zentralisiert gespeichert werden    
 
 Möchte man auf ein Journal einer anderen Maschine zugreifen, so kann man entweder die _Machine ID_ angeben, oder ein Verzeichnis, in dem sich das Journal befindet:
 
-- `journalctl --file=<machine-id>`
+- `journalctl --file`<machine-id>`
 - `journalctl -D /var/log/journal/<machine-id>`
 - `cat /etc/machine-id` die Machine-ID ausgeben lassen
 - Die Machine-ID kennzeichnet ein System eindeutig, ähnlich wie eine UID, PID etc.
