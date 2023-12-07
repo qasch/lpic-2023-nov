@@ -1241,38 +1241,44 @@ facility.leve action
 - Log-Einträge lassen sich somit im Nachhinein nicht mehr ändern, ohne dass dies nachgewiesen werden kann    
 - `journald` loggt nicht mehr in Textdateien, sondern in Datenbanken
 - keine Logrotation, `journald` überwacht seine Größe selbst: max. 10% der HD bzw. max 4 GB
-- in Debian 12 ist kein `rsyslog` mehr installiert und es in der config deaktiviert, in der 11er lief es parallel  
-- systemd ist modular und kann (Teile?) abgeschaltet bekommen, es kann in Debian 12 nachinstalliert werden    
- /etc/systemd/jounal.conf  ForwardToSyslog=yes   syslog ist aktiviert   mit No deaktiviert  
-- Storage=auto  Journal besteht nur im RAM    
-- Storage=persistent   -> die Dateie wird var/log/jounal erstellt, kann aber auch manuell erstellt werden   
-- volatile nur im RAM  none stellt es ab, syslog kann nachinstalliert werden  
-- Seal=yes  verschlüsselung  
-- man journald.conf  journald.conf, journald.conf.d, journald@.conf - Journal-Dienst-Konfigurationsdateien  
+- als Kompatibilitätsschicht stellt `journald` die Funktion bereit, Log Meldungen an den `rsyslog` weiterzuleiten. Dazu muss in der Konfigurationsdatei `/etc/system/journald.conf` der Eintrag `ForwardToSyslog=yes` existieren und der Dienst `rsyslog` installiert sein und laufen
+- in Debian 12 ist kein `rsyslog` mehr installiert. Obiges Verhalten kann also durch Installation von `rsyslog` wiederhergestellt werden
+- `systemd` ist generell modular aufgebaut, man kann also Teile/Module abschalten falls man das möchte
+- Das Journal kann entweder in eine Datei auf der Festlplatte erstellt werden oder nur im RAM. Dazu gibt es folgende Einstellungen in der `/etc/systemd/journald.conf`:
+  - `Storage=volatile`:  Das Journal besteht nur im RAM    
+  - `Storage=auto`:  Journal besteht nur im RAM, es sei denn das Verzeichnis `/var/log/journal` existiert, dann werden darin die Datenbankdateien erstellt
+- `Storage=persistent`: Logging auf der Platee, die Datei `/var/log/jounal` wird erstellt falls nicht vorhanden
+  - `Storage=none`:  Logging nur auf der Konsole etc.
+- `Seal=yes`: Log Meldungen werden _gesealt_, können also nicht unbemerkt verändert werden
+- `SystemMaxUse`:  max. Speicherverbrauch definierbar  
+- `man journald.conf`: Manpage der journald-Konfigurationsdatei
 
-SystemMaxUse  max. Speicherverbrauch definierbar  
+=== Abfrage des journals
 
-- jounalctl  Abfragen und Control des Systemd-Journals  Anzeige mit less
+Als regulärer User kann man nicht alle Log Meldungen sehen. Dies kann man ändern, in dem man den Benutzer der Gruppe `adm` oder `systemd-journal` hinzufügt.
 
-  jounalctl --vacuum-size 50M  beschränkt das Journal auf 50 MB  
-  jounalctl --vacuum-time 2month    
-  jounalctl --disku-sage  als root oder der Gruppe adm sehen alle Daten  
-  jounalctl --verify   Prüft die Journal-Dateien auf interne Konsistenz   nach verkleinerung bleiben zusammenhängende Logmeldungen trotzdem erhalten  
-
-- jounalctl -b  -b Einträge des aktuellen Boots anzeigen  jounalctl -b | grep <suchwort>
-- jounalctl -b -1  Einträge des vorherigen Boots anzeigen  Zeigt Nachrichten von einem bestimmten Systemstart. Dies passt auf »_BOOT_ID=«.
-- jounalctl --since="20 min ago"  Meldungen der letzten 20 Min.   since yesterday   oder genaues Datum mit oder ohne Uhrzeit'2023-12-01 12.55'  
-- jounalctl --since='2023-12-01 12.55' --until'2023-12-01 13.55'    
-- Zeitangaben wie bei systemd.time  einheitliche Bedienung  
-
-  jounalctl -n            new  neueste Einträge anzeigen    jounalctl -n 20
-  jounalctl -e            end  ans Ende des Logs springen  
-  jounalctl -r            reverse  umgedrehte Reihenfolge  
-  jounalctl -k  Kernelmeldungen  
-  jounalctl -pr           priority errors  priorisierte Meldungen   hier mit Fehlern  
-  jounalctl -u            units  Dienste, targets, mounts, device, sockets sind units    jounalctl -u apache2
-  jounalctl /dev/sda  zeigt Meldungen der Festplatte sda an  
-  jounalctl _UUID=1000  Einträge des 1. Nutzers betreffend
+- `jounalctl`: zeigt das komplette journal im Pager `less` an
+- `jounalctl --vacuum-size 50M`:  beschränkt das Journal auf 50 MB  
+- `jounalctl --vacuum-time 2weeks`: löscht alle Einträge die älter sind als 2 Wochen
+- `jounalctl --disk-usage`: gibt die aktuelle Größe des Journals aus
+- `jounalctl --verify`: Prüft die Journal-Dateien auf interne Konsistenz, wichtig z.B. nach Verkleinerung, da hier zusammenhängende Logmeldungen erhalten bleiben, die Beschränkung der Größe erfolgt also nicht exakt, sondern logisch
+- `jounalctl -b`, `journalctl -b 0`: Einträge des aktuellen Boots anzeigen
+- `jounalctl -b -1`  Einträge des vorherigen Boots anzeigen. `-1` ist hier der Offset. Mit `3` würden z.B. die Meldungen des dritten Boots angezeigt werden.
+- `journalctl --list-boots` zeigt eine Liste aller Bootvorgänge an
+- `jounalctl --since="20 min ago"`  Meldungen der letzten 20 Min.   
+- `journalctl --since yesterday`: Meldungen seit gestern   
+- `journalctl --since='2023-12-01 12.55'` Meldungen seit diesem Zeitpunkt 
+- `jounalctl --since='2023-12-01 12.55' --until'2023-12-01 13.55'` Meldungen zwischen diesen Zeitpunkten
+- Zeitangaben sieht `man systemd.time` -> einheitliche Syntax in `systemd` (also wie bei z.B. Timern)
+- `jounalctl -n` (_new_) 10 neuste Einträge anzeigen (analog zu `tail`)
+- `jounalctl -n 20` 20 neuste Einträge
+- `jounalctl -e` (_end_) ans Ende des Logs springen  
+- `jounalctl -r`  (_reverse_) umgedrehte Reihenfolge  
+- `jounalctl -k` (_kernel_) Kernelmeldungen  
+- `jounalctl -p err` (_priority errors_) Angabe der Priority / des Log-Levels _error_
+- `jounalctl -u apache2` (_unit_) Anzeigen der Meldungen des _Units_ Apache2 (unter `systemd` ist alles ein _Unit_: Dienste (services), targets, mounts, device, sockets etc.)
+- `jounalctl /dev/sda` zeigt Meldungen des Geräts `/dev/sda` an  
+- `jounalctl _UUID=1000`  Einträge des Nutzers mit der UID 1000
 
 
 
