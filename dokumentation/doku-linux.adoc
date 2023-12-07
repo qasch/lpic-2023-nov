@@ -1395,7 +1395,7 @@ create 640 www-data adm
 - `SystemMaxUse`:  max. Speicherverbrauch definierbar  
 - `man journald.conf`: Manpage der journald-Konfigurationsdatei
 
-``` Abfrage des Journals
+=== Abfrage des Journals
 
 Als regulärer User kann man nicht alle Log Meldungen sehen. Dies kann man ändern, in dem man den Benutzer der Gruppe `adm` oder `systemd-journal` hinzufügt.
 
@@ -1448,3 +1448,79 @@ Möchte man auf ein Journal einer anderen Maschine zugreifen, so kann man entwed
  echo "Log as you can" | systemd-cat -t backup-script -p info
 
  journalctl -e -n 1
+
+== Language and Character Encoding
+
+- Sprache und bestimmte Sonderzeichen werden über die sog. `locale` bestimmt
+- die meisten Shell Programme fragen hierzu die Umgebungsvariable `LANG` ab
+- das Format ist immer in der Form `language_REGIONCODE`, wie z.B. `de_DE` oder `en_US`
+- in dieser Variablen wird ausserdem die Zeichenkodierung gespeichert:
+
+----
+$ echo $LANG
+de_DE.UTF-8
+----
+
+- Datei `/etc/locale.conf`:
+
+----
+LANG=en_US.UTF-8
+LANGUAGE=en_US:de_DE
+LC_TIME=de_DE.UTF-8
+LC_COLLATE=C
+LC_MESSAGES=POSIX
+LC_NUMERIC=de_DE.UTF-8
+LC_MONETARY=de_DE.UTF-8
+LC_PAPER=de_DE.UTF-8
+LC_NAME=de_DE.UTF-8
+LC_ADDRESS=de_DE.UTF-8
+LC_TELEPHONE=de_DE.UTF-8
+LC_MEASUREMENT=en_GB.UTF-8
+LC_IDENTIFICATION=de_DE.UTF-8
+LC_ALL=
+----
+
+- Anpassungen für die momentane und zukünftige Sessions in den Dateien `.bash_profile` oder `.profile`
+- Änderungen werden Benutzer unabhängigen Programmen (z.B. Login Display Manager) aber erst nach einem Aus- und wieder Einloggen bewusst
+- auf Systemd basierten Systemen kann das Kommanodo `localectl` genutzt werden, um die `locale` zu setzen:
+
+----
+localectl set-locale LANG=en_US.UTF-8
+----
+
+=== weitere Umgebungsvariablen
+
+- `LC_COLLATE` alphabetische Sortierung
+- `LC_TYPE` Behandlung bestimmter Zeichen, z.B. bezüglich Gross- und Kleinschreibung
+- `LC_MESSAGES` Anzeigesprache von Programmen (hauptsächlich GNU Programme)
+- `LC_MONETARY` Währungseinheit 
+- `LC_NUMERIC` Zahlenformat für alle anderen Zahlen
+- `LC_TIME` Zeit- und Datumsformat 
+- `LC_PAPER` Standardpapiergrösse  
+- `LC_ALL` überschreibt alle anderen Variablen (inkl. `LANG`)
+
+=== Kommandos
+
+- Anzeige der aktuell definierten Variablen mit `locale`
+- die einzige nicht gesetzte Variable ist `LC_ALL`, welche genutzt werden kann, um temporär alle anderen zu überschreiben
+- da auch die Art der alphabetischen Sortierung beeinflusst werden kann, es aber gerade mit Skripten zu Problemen kommen kann was die Sortierung angeht, sollte die Variable `LANG` auf die allgemeine Varianel `C` gesetzt werden (`LANG`C`)
+- die Locale `C` ist ausserdem performanter, da hier nur eine einfache byteweiser Vergleich bei der Sortierung durchgeführt wird
+
+
+=== Encoding Konvertierung
+
+- Dokumente, die in einer anderen Kodierung vorliegen und daher seltsame Zeichen enthalten, können mit dem Kommando `iconv` konvertiert werden:
+- Anzeige aller unterstützten Encodings mit `iconv -l` oder `iconv --list`
+- anstatt eines Redirects kann auch die Option `-o` für `--output` genutzt werden
+
+----
+iconv -f ISO-8859-1 -t UTF-8 original.txt > converted.txt
+iconv --from-code=ISO-8859-1 --to-code=UTF-8 original.txt > converted.txt
+
+iconv -c -f UTF-8 -t US-ASCII -o output-ascii.txt input-utf8.txt
+iconv -f UTF-8 -t ASCII//TRANSLIT -o output-ascii.txt input-utf8.txt
+----
+
+- siehe auch: https://www.howtogeek.com/iconv-command-linux/
+
+
