@@ -1222,7 +1222,7 @@ TODO
 - `warning, warn`
 - `error, err`
 - `crit`
-- `alert` Alarm
+- `alert`
 - `emerg, panic`
 
 === Facilities
@@ -1280,8 +1280,11 @@ Als regulärer User kann man nicht alle Log Meldungen sehen. Dies kann man ände
 - `jounalctl /dev/sda` zeigt Meldungen des Geräts `/dev/sda` an  
 - `jounalctl _UUID=1000`  Einträge des Nutzers mit der UID 1000
 
+Auch bei Verwendung von `journald` können die Daten auf einen Server zentralisiert gespeichert werden    
 
+Möchte man auf ein Journal einer anderen Maschine zugreifen, so kann man entweder die _Machine ID_ angeben, oder ein Verzeichnis, in dem sich das Journal befindet:
 
-
-
-
+- `journalctl --file=<machine-id>`
+- `journalctl -D /var/log/journal/<machine-id>`
+- `cat /etc/machine-id` die Machine-ID ausgeben lassen
+- Die Machine-ID kennzeichnet ein System eindeutig, ähnlich wie eine UID, PID etc.
