@@ -1524,3 +1524,180 @@ iconv -f UTF-8 -t ASCII//TRANSLIT -o output-ascii.txt input-utf8.txt
 - siehe auch: https://www.howtogeek.com/iconv-command-linux/
 
 
+== Systemzeit
+
+=== Hardwareclock und Systemuhr
+
+TODO
+
+=== NTP 
+
+- `NTP`: _Network Time Protocol_
+- `ntpd` In der Regel Name des NTP Daemons (distributionsabhängig)
+- NTP ist hierarchisch organisiert:
+  - Referenzuhren (Atomuhren) am obersten Ende der Hierarchie
+  - _Stratum 1_ Server haben Zugriff auf die Referenzuhren
+  - _Stratum 1_ Server selbst sind aber auch nicht öffentlich zugänglich
+  - _Stratum 2_ Server hat Zugriff auf _Stratum 1_ Server
+  - _Stratum 3_ Server hat Zugriff auf _Stratum 2_ Server
+  - ab _Stratum 2_ sind alle öffentlich zugänglich
+
+=== wichtige Begriffe in diesem Zusammenhang
+
+- Offset:: Der Offset (Versatz) bezeichnet die absolute Differenz zwischen Systemzeit und NTP-Zeit. Zeigt die Systemuhr z.B. 12:00:02 und die NTP-Zeit 11:59:58, dann beträgt der Offset zwischen den beiden Uhren vier Sekunden.
+- Step:: Ist der Offset zwischen dem NTP-Provider und einem Consumer *größer* als 128ms, führt NTP eine einzelne signifikante Änderung der Systemzeit durch, statt die Systemzeit zu verlangsamen oder zu beschleunigen. Dies wird als Stepping bezeichnet.
+- Slew:: Slewing bezeichnet die Änderungen der Systemzeit, wenn der Offset zwischen Systemzeit und NTP *weniger* als 128ms beträgt. Ist dies der Fall, werden die Änderungen schrittweise vorgenommen.
+- Insane Time:: Beträgt der Offset zwischen Systemzeit und NTP-Zeit mehr als 17 Minuten, wird die Systemzeit als insane (“verrückt”) betrachtet, und der NTP-Daemon führt *keine Änderungen* an der Systemzeit durch. Es müssen besondere Schritte unternommen werden, um die Systemzeit innerhalb von 17 Minuten auf die richtige Zeit zu korrigieren.
+- Drift:: Drift beschreibt das Phänomen, dass zwei Uhren im Laufe der Zeit nicht mehr synchron sind. Wurden zwei Uhren synchronisiert, sind es aber im Laufe der Zeit nicht mehr, spricht man von einem Clock Drift oder Uhrendrift.
+- Jitter:: Jitter bezeichnet den Betrag der Abweichung seit der letzten Abfrage einer Uhr. Wenn also die letzte NTP-Synchronisierung vor 17 Minuten stattfand und der Offset zwischen NTP-Provider und -Consumer 3 Millisekunden beträgt, dann sind 3 Millisekunden der Jitter.
+
+
+=== chrony
+
+- alternative Implementierung des NTP
+- der Daemon heißt `chronyd`
+- Kommandozeilenprogramm heißt `chronyc`
+- Paket (Debian) heißt `chrony`
+
+
+
+- `timedatectl show-timesync --all`: Zeigt SNTP-Informationen an.
+- `ntpdate <address>`: Führt manuelles, einmaliges NTP-Update durch. Der NTP Service muss vorher gestoppt werden.
+- `ntpq -p`: Gibt eine Historie der letzten NTP-Abfragen aus. n ersetzt URLs durch IP-Adressen.
+- `chronyc tracking`: Zeigt den NTP-Status an, wenn chrony verwendet wird.
+- `chronyc ntpdata`: Zeigt NTP-Informationen über den letzten Poll an.
+- `hronyc sources`: Zeigt Informationen über NTP-Anbieter an.
+- `chronyc makestep`: Führt ein manuelles, einmaliges NTP-Update durch, wenn chrony aktiv ist.
+
+
+== User Interfaces and Desktops
+
+- Distribution
+- GUI:: Graphical User Interface
+- X Window System:: X-Server, X11, X, Nachfolger heißt _Wayland_
+- X Server:: kommuniziert mit Hardware (Grafikkarte, Tastatur, Maus
+- Desktop Umgebung / Desktop Environment:: _KDE_, _GNOME_, _Xfce_, ...,  Beinhaltet i.d.R. einen Window Manger, einen Display Manager, Programmstarter, Panel, Konfigurationstools zur Anpassung des Aussehens, weitere Software
+- Window Manager:: Floating/Tiling Window Manager (KWin, Metacity, Herbstluftwm, i3wm, awesome, bspwm, ...)
+- Display Manager:: Authentifizierung von Benutzern, Start eines Window Managers (_LightDM_, _GDM_,_Slim_, etc.)
+- Grafisches Toolkit:: Qt, GTK+
+
+=== X-Server
+
+Variable `$DISPLAY`:
+
+ hostname:displaynr.screennr
+
+ echo $DISPLAY
+ > :0
+
+ echo $DISPLAY
+ > :0.1
+
+
+== Networking
+
+- IP Protokoll -> TCP/IP (_Transmission Control Protocol/Internet Protocol_)
+- IP Adresse -> IPv4 / IPv6 (Einführung 1995)
+- IPv4 -> 192.168.1.100 -> 32 Bit  
+          
+          255.255.255.0
+          11111111.11111111.11111111.0
+
+          0.0.0.0 -> 255.255.255.255
+
+
+
+          192.168.10.20
+          11000000.10101000.00001010.00010100
+
+- IPv6 -> ....   -> 128 Bit
+
+=== Öffentliche und privaten IP IP-Adressen
+
+==== Privaten Netzklassen
+
+- Class A:: 10.0.0.0    bis 10.255.255.255  10.0.0.0/8     255.0.0.0      # 1 x 16.777.216
+- Class B:: 172.16.0.0  bis 172.31.255.255  172.16.0.0/12  255.240.0.0    # 16 x 65.536 
+
+   1x10^1 + 1x10^0  = 11  dez
+   1      1  dez
+
+   1x2^1  + 1x2^0   =  3  dez
+   1      1 bin
+
+   
+           16 8 4 2 1
+            1 1 1 1 1 bin
+
+
+   11111111.11110000.00000000.00000000
+
+     255      240        0       0
+
+- Class C:: 192.168.0.0 bis 192.168.255.255 192.168.0.0/16 255.255.0.0    # 256 x 256
+
+==== Gründe für Subnetting
+
+- Unterteilung eines Netzes in weitere Subnetze
+- Aufteilung/Trennung der Teilnehmer/Hosts
+- Hosts in einem Subnetz können miteinander ohne Routing kommunizieren
+- auch Hosts in anderen Netzen sind erreichbar, allerdings nur über einen Router
+- -> z.B. Verringerung der Netzlast 
+- -> z.B. Erhöhung der Sicherheit
+
+  2001:0db8:85a3:0000:0000:0000:0000:0001/64 -> Präfix
+
+  Broadcast -> Multicast
+
+
+  RFC -> Request For Comments
+
+
+
+  2001:0db8:85a3:0002:0000:0000:0000:0000
+
+ Regeln zur Verkürzung von IPv6 Adressen:
+
+ 1. Führende Nullen innerhalb eines Blocks können ausgelassen werden
+ 2. Einmalig können zusammenhängende Nullen durch einen Doppelpunkt zusammengefasst werden:
+
+  2001:0db8:85a3:0002:0000:0000:0000:0000
+  2001:0db8:85a3:0002::
+
+  2001:0db8:0000:0000:0a00:0000:0000:0000
+  2001:0db8:0:0:0a00::
+  2001:db8:0:0:a00::
+
+  192.168.2.199:443
+
+nicht eindeutig: Ist 443 der Port oder Teil der IPv6 Adresse (0443):
+
+  2001::db8:0000:0000:a00:443
+
+daher Klammern:
+
+  [2001::db8:0000:0000:a00]:443
+
+bijektiv - eineindeutig
+
+=== Besondere IPv6 Adressen
+
+- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
