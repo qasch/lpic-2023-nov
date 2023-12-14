@@ -1690,6 +1690,48 @@ bijektiv - eineindeutig
 - `ff00::/8`: Multicast Adressen
 
 
+=== UDP, TCP, ICMP
+
+- `UDP`: _User Datagram Protocal_ - verbindungsloses Protokoll, es findet keine Kontrolle statt, ob Pakete angekommen sind -> schneller, unsicherer (Streaming, Video-Chat, ...)
+- `TCP`: _Transmission Control Protocol_ - verbindungsbasiertes Protokoll, es wird geprüft ob alle Pakete ankommen und ggf. nachgeschickt -> langsamer, sicherer (Surfen im Internet, Dateiübertragungen, E-Mail, ...)
+- `ICMP`: _Internet Control Message Protocol_ - Kommanodo `ping`
+
+
+=== wichtige Ports 
+
+Datei `/etc/services`
+
+----
+ftp-data	20/tcp
+ftp		    21/tcp
+fsp		    21/udp		fspd
+ssh		    22/tcp				# SSH Remote Login Protocol
+telnet		23/tcp
+smtp		25/tcp		mail
+domain		53/tcp				# Domain Name Server
+domain		53/udp
+http		80/tcp		www		# WorldWideWeb HTTP
+pop3		110/tcp		pop-3	# POP version 3
+ntp		    123/udp				# Network Time Protocol
+netbios-ssn	139/tcp				# NETBIOS session service
+imap2		143/tcp		imap	# Interim Mail Access P 2 and 4
+snmp		161/tcp				# Simple Net Mgmt Protocol
+snmp		161/udp
+snmp-trap	162/tcp		snmptrap# Traps for SNMP
+snmp-trap	162/udp		snmptrap
+ldap		389/tcp			    # Lightweight Directory Access Protocol
+ldap		389/udp
+https		443/tcp				# http protocol over TLS/SSL
+https		443/udp				# HTTP/3
+submissions	465/tcp		ssmtp smtps urd # Submission over TLS [RFC8314]
+shell		514/tcp		cmd syslog	# no passwords used
+syslog		514/udp
+ldaps		636/tcp				# LDAP over SSL
+ldaps		636/udp
+imaps		993/tcp				# IMAP over SSL
+pop3s		995/tcp				# POP-3 over SSL 
+----
+
 
 
 
