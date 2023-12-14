@@ -1599,43 +1599,8 @@ Variable `$DISPLAY`:
 - IP Protokoll -> TCP/IP (_Transmission Control Protocol/Internet Protocol_)
 - IP Adresse -> IPv4 / IPv6 (Einführung 1995)
 - IPv4 -> 192.168.1.100 -> 32 Bit  
+- IPv6 -> fe80:0000:0000:0000:2e33:58ff:fefa:27a1 -> 128 Bit
           
-          255.255.255.0
-          11111111.11111111.11111111.0
-
-          0.0.0.0 -> 255.255.255.255
-
-
-
-          192.168.10.20
-          11000000.10101000.00001010.00010100
-
-- IPv6 -> ....   -> 128 Bit
-
-=== Öffentliche und privaten IP IP-Adressen
-
-==== Privaten Netzklassen
-
-- Class A:: 10.0.0.0    bis 10.255.255.255  10.0.0.0/8     255.0.0.0      # 1 x 16.777.216
-- Class B:: 172.16.0.0  bis 172.31.255.255  172.16.0.0/12  255.240.0.0    # 16 x 65.536 
-
-   1x10^1 + 1x10^0  = 11  dez
-   1      1  dez
-
-   1x2^1  + 1x2^0   =  3  dez
-   1      1 bin
-
-   
-           16 8 4 2 1
-            1 1 1 1 1 bin
-
-
-   11111111.11110000.00000000.00000000
-
-     255      240        0       0
-
-- Class C:: 192.168.0.0 bis 192.168.255.255 192.168.0.0/16 255.255.0.0    # 256 x 256
-
 ==== Gründe für Subnetting
 
 - Unterteilung eines Netzes in weitere Subnetze
@@ -1645,42 +1610,45 @@ Variable `$DISPLAY`:
 - -> z.B. Verringerung der Netzlast 
 - -> z.B. Erhöhung der Sicherheit
 
-  2001:0db8:85a3:0000:0000:0000:0000:0001/64 -> Präfix
+=== Unterschiede IPv4 zu IPv6
 
-  Broadcast -> Multicast
+Subnetzmaske/CIDR heißt hier _Präfix_
 
+  2001:0db8:85a3:0000:0000:0000:0000:0001/64 ->  /64 ist der Präfix
 
-  RFC -> Request For Comments
+Es gibt keinen _Broadcast_ mehr. Die Entsprechung hierzu ist der _Multicast_. Hier werden Pakete nicht an *alle* erreichbaren Hosts gesendet, sondern an eine bestimmte *Gruppe* von Hosts, z.B. an alle Router, an alle Drucker oder so.
 
-
-
-  2001:0db8:85a3:0002:0000:0000:0000:0000
-
- Regeln zur Verkürzung von IPv6 Adressen:
+==== Regeln zur Verkürzung von IPv6 Adressen:
 
  1. Führende Nullen innerhalb eines Blocks können ausgelassen werden
  2. Einmalig können zusammenhängende Nullen durch einen Doppelpunkt zusammengefasst werden:
 
+Anwendung von Regel 2:
+
   2001:0db8:85a3:0002:0000:0000:0000:0000
   2001:0db8:85a3:0002::
+
+Anwendung von Regel 1 und 2:
 
   2001:0db8:0000:0000:0a00:0000:0000:0000
   2001:0db8:0:0:0a00::
   2001:db8:0:0:a00::
 
+==== Angabe eines Ports
+
+Bei IPv4 wird der Port hinter die IP Adresse durch einen Doppelpunkt getrennt angegeben:
+
   192.168.2.199:443
 
-nicht eindeutig: Ist 443 der Port oder Teil der IPv6 Adresse (0443):
+Das ist bei IPv6 nicht eindeutig: Ist unten die `443` der Port oder Teil der IPv6 Adresse (`0443`)?
 
   2001::db8:0000:0000:a00:443
 
-daher Klammern:
+Daher wird die IP Adresse in eckige Klammern gesetzt und der Port wie gewohnt mit einem Doppelpunkt angehängt:
 
   [2001::db8:0000:0000:a00]:443
 
-bijektiv - eineindeutig
-
-=== Besondere IPv6 Adressen
+==== Besondere IPv6 Adressen
 
 - `::/0`: Standardroute
 - `::/128`: entspricht `0.0.0.0` unter IPv4, darf keinem Host zugewiesen werden
@@ -1688,18 +1656,19 @@ bijektiv - eineindeutig
 - `fe80::/64`: Link-Local-Unicast Adressen
 - `fc00::/7`: "private IP Adressen" _Uniqui Local Addresses_ (ULA)
 - `ff00::/8`: Multicast Adressen
+- usw. (für uns nicht weiter wichtig)
 
-
-=== UDP, TCP, ICMP
+==== UDP, TCP, ICMP
 
 - `UDP`: _User Datagram Protocal_ - verbindungsloses Protokoll, es findet keine Kontrolle statt, ob Pakete angekommen sind -> schneller, unsicherer (Streaming, Video-Chat, ...)
 - `TCP`: _Transmission Control Protocol_ - verbindungsbasiertes Protokoll, es wird geprüft ob alle Pakete ankommen und ggf. nachgeschickt -> langsamer, sicherer (Surfen im Internet, Dateiübertragungen, E-Mail, ...)
 - `ICMP`: _Internet Control Message Protocol_ - Kommanodo `ping`
 
-
 === wichtige Ports 
 
-Datei `/etc/services`
+In der Datei `/etc/services` werden die Ports für die jeweiligen Services gelistet. Bzw. können Dienste hier nachschauen, welcher Standardport für sie gesetzt ist. Nähere Infos zu der Datei und Ports im Allgemeinen unter `man 5 services`.
+
+Es folgt eine Liste der wichtigsten Ports und zugehöriger Dienste:
 
 ----
 ftp-data	20/tcp
