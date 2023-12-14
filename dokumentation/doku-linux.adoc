@@ -1612,6 +1612,9 @@ Variable `$DISPLAY`:
 
 === Unterschiede IPv4 zu IPv6
 
+- https://de.wikipedia.org/wiki/IPv6
+- https://www.elektronik-kompendium.de/sites/net/0812201.htm
+
 Subnetzmaske/CIDR heißt hier _Präfix_
 
   2001:0db8:85a3:0000:0000:0000:0000:0001/64 ->  /64 ist der Präfix
