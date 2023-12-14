@@ -1682,11 +1682,12 @@ bijektiv - eineindeutig
 
 === Besondere IPv6 Adressen
 
-- 
-
-
-
-
+- `::/0`: Standardroute
+- `::/128`: entspricht `0.0.0.0` unter IPv4, darf keinem Host zugewiesen werden
+- `::1/128`: Loopback Adresse
+- `fe80::/64`: Link-Local-Unicast Adressen
+- `fc00::/7`: "private IP Adressen" _Uniqui Local Addresses_ (ULA)
+- `ff00::/8`: Multicast Adressen
 
 
 
